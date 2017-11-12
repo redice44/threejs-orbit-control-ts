@@ -102,7 +102,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
   // Mouse buttons
   public mouseButtons: MouseButtons;
 
-  private object: THREE.PerspectiveCamera | THREE.OrthographicCamera;
+  private camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
   private domElement: Document | Element;
 
   // for reset
@@ -133,11 +133,11 @@ export default class OrbitControls extends THREE.EventDispatcher {
   private dollyEnd: THREE.Vector2;
   private dollyDelta: THREE.Vector2;
 
-  constructor( object: THREE.PerspectiveCamera | THREE.OrthographicCamera, domElement: Document | Element = document ) {
+  constructor( camera: THREE.PerspectiveCamera | THREE.OrthographicCamera, domElement: Document | Element = document ) {
 
     super();
 
-    this.object = object;
+    this.camera = camera;
     this.domElement = domElement;
 
     // Default Settings
@@ -153,7 +153,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
     // Set to false to disable this control
     this.enabled = true;
 
-    // "target" sets the location of focus, where the object orbits around
+    // "target" sets the location of focus, where the camera orbits around
     this.target = new THREE.Vector3()
 
     // How far you can dolly in and out ( PerspectiveCamera only )
@@ -258,18 +258,18 @@ export default class OrbitControls extends THREE.EventDispatcher {
   public saveState() {
 
     this.target0.copy( this.target );
-    this.position0.copy( this.object.position );
-    this.zoom0 = this.object.zoom;
+    this.position0.copy( this.camera.position );
+    this.zoom0 = this.camera.zoom;
 
   }
 
   public reset() {
 
     this.target.copy( this.target0 );
-    this.object.position.copy( this.position0 );
-    this.object.zoom = this.zoom0;
+    this.camera.position.copy( this.position0 );
+    this.camera.zoom = this.zoom0;
 
-    this.object.updateProjectionMatrix();
+    this.camera.updateProjectionMatrix();
     this.dispatchEvent( { type: Events.change } );
 
     this.update();
@@ -282,7 +282,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
     const offset: THREE.Vector3 = new THREE.Vector3();
 
     // so camera.up is the orbit axis
-    const quat: THREE.Quaternion = new THREE.Quaternion().setFromUnitVectors( this.object.up, new THREE.Vector3( 0, 1, 0 ) );
+    const quat: THREE.Quaternion = new THREE.Quaternion().setFromUnitVectors( this.camera.up, new THREE.Vector3( 0, 1, 0 ) );
     const quatInverse: THREE.Quaternion = quat.clone().inverse();
 
     const lastPosition: THREE.Vector3 = new THREE.Vector3();
@@ -290,7 +290,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     // fn?
 
-    const position: THREE.Vector3 = this.object.position;
+    const position: THREE.Vector3 = this.camera.position;
 
     offset.copy( position ).sub( this.target );
 
@@ -332,7 +332,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     position.copy( this.target ).add( offset );
 
-    this.object.lookAt( this.target );
+    this.camera.lookAt( this.target );
 
     if ( this.enableDamping === true ) {
 
@@ -353,13 +353,13 @@ export default class OrbitControls extends THREE.EventDispatcher {
     // using small-angle approximation cos(x/2) = 1 - x^2 / 8
 
     if ( this.zoomChanged ||
-      lastPosition.distanceToSquared( this.object.position ) > this.EPS ||
-      8 * ( 1 - lastQuaternion.dot( this.object.quaternion ) ) > this.EPS ) {
+      lastPosition.distanceToSquared( this.camera.position ) > this.EPS ||
+      8 * ( 1 - lastQuaternion.dot( this.camera.quaternion ) ) > this.EPS ) {
 
       this.dispatchEvent( { type: Events.change } );
 
-      lastPosition.copy( this.object.position );
-      lastQuaternion.copy( this.object.quaternion );
+      lastPosition.copy( this.camera.position );
+      lastQuaternion.copy( this.camera.quaternion );
       this.zoomChanged = false;
 
       return true;
@@ -386,31 +386,87 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private getAutoRotationAngle() {
+  private getAutoRotationAngle(): number {
+
+    return 2 * Math.PI / 60 / 60 * this.autoRotateSpeed;
 
   }
 
-  private getZoomScale() {
+  private getZoomScale(): number {
+
+    return Math.pow( 0.95, this.zoomSpeed );
 
   }
 
-  private rotateLeft(angle) {
+  private rotateLeft( angle: number ): void {
+
+    this.sphericalDelta.theta -= angle;
 
   }
 
-  private rotateUp(angle) {
+  private rotateUp( angle: number ): void {
+
+    this.sphericalDelta.phi -= angle;
 
   }
 
-  private panLeft() {
+  private panLeft( distance: number, objectMatrix: THREE.Matrix4 ): void {
+
+    const v: THREE.Vector3 = new THREE.Vector3();
+
+    v.setFromMatrixColumn( objectMatrix, 0 ) // get X column of objectMatrix
+    v.multiplyScalar( - distance );
+
+    this.panOffset.add( v );
 
   }
 
-  private panUp() {
+  private panUp( distance: number, objectMatrix: THREE.Matrix4 ): void {
+
+    const v: THREE.Vector3 = new THREE.Vector3();
+
+    v.setFromMatrixColumn( objectMatrix, 1 ); // get Y column of objectMatrix
+    v.multiplyScalar( distance );
+
+    this.panOffset.add( v );
 
   }
 
-  private pan() {
+  private pan( deltaX, deltaY ) {
+
+    const offset: THREE.Vector3 = new THREE.Vector3();
+
+    const element: Element = this.domElement === document ? this.domElement.body : this.domElement as Element;
+
+    if ( ( this.camera as THREE.PerspectiveCamera ).isPerspectiveCamera ) {
+      const camera: THREE.PerspectiveCamera = this.camera as THREE.PerspectiveCamera;
+
+      // perspective
+      const position = camera.position;
+      offset.copy ( position ).sub( this.target );
+      let targetDistance = offset.length();
+
+      // half of the fov is center to top of screen
+      targetDistance *= Math.tan( ( camera.fov / 2 ) * Math.PI / 180.0 )
+
+      // we actually don't use screenWidth, since perspective camera is fixed to screen height
+      this.panLeft( 2 * deltaX * targetDistance / element.clientHeight, camera.matrix );
+      this.panUp( 2 * deltaY * targetDistance / element.clientHeight, camera.matrix );
+
+    } else if ( ( this.camera as THREE.OrthographicCamera ).isOrthographicCamera ) {
+      const camera: THREE.OrthographicCamera = this.camera as THREE.OrthographicCamera;
+
+
+      this.panLeft( deltaX * ( camera.right - camera.left ) / camera.zoom / element.clientWidth, camera.matrix );
+      this.panUp( deltaY * ( camera.top - camera.bottom ) / camera.zoom / element.clientHeight, camera.matrix );
+
+    } else {
+
+      // camera neither orthographic nor perspective
+      console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.' );
+      this.enablePan = false;
+
+    }
 
   }
 
