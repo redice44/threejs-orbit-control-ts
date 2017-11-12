@@ -472,9 +472,43 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   private dollyIn( dollyScale ) {
 
+    if ( ( this.camera as THREE.PerspectiveCamera ).isPerspectiveCamera ) {
+
+      this.scale /= dollyScale;
+
+    } else if ( ( this.camera as THREE.OrthographicCamera ).isOrthographicCamera ) {
+
+      this.camera.zoom = Math.max( this.minZoom, Math.min( this.maxZoom, this.camera.zoom * dollyScale ) );
+      this.camera.updateProjectionMatrix();
+      this.zoomChanged = true;
+
+    } else {
+
+      console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+      this.enableZoom = false;
+
+    }
+
   }
 
   private dollyOut( dollyScale ) {
+
+    if ( ( this.camera as THREE.PerspectiveCamera ).isPerspectiveCamera ) {
+
+      this.scale *= dollyScale;
+
+    } else if ( ( this.camera as THREE.OrthographicCamera ).isOrthographicCamera ) {
+
+      this.camera.zoom = Math.max( this.minZoom, Math.min( this.maxZoom, this.camera.zoom / dollyScale ) );
+      this.camera.updateProjectionMatrix();
+      this.zoomChanged = true;
+
+    } else {
+
+      console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+      this.enableZoom = false;
+
+    }
 
   }
 
