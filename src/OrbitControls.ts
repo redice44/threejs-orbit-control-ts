@@ -121,6 +121,13 @@ export default class OrbitControls extends THREE.EventDispatcher {
     this.domElement = domElement;
 
     // Default Settings
+    this.setupDefaults();
+
+    this.setupHandlers();
+    this.update();
+  }
+
+  private setupDefaults() {
 
     // Set to false to disable this control
     this.enabled = true;
@@ -178,6 +185,19 @@ export default class OrbitControls extends THREE.EventDispatcher {
     // Mouse buttons
     this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE, PAN: THREE.MOUSE.RIGHT };
 
+  }
+
+  private setupHandlers() {
+    this.domElement.addEventListener( 'contextmenu', onContextMenu, false );
+
+    this.domElement.addEventListener( 'mousedown', onMouseDown, false );
+    this.domElement.addEventListener( 'wheel', onMouseWheel, false );
+
+    this.domElement.addEventListener( 'touchstart', onTouchStart, false );
+    this.domElement.addEventListener( 'touchend', onTouchEnd, false );
+    this.domElement.addEventListener( 'touchmove', onTouchMove, false );
+
+    window.addEventListener( 'keydown', onKeyDown, false );
   }
 
   getPolarAngle() {
