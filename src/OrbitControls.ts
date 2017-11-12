@@ -234,16 +234,16 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   private setupHandlers() {
 
-    this.domElement.addEventListener( 'contextmenu', this.onContextMenu, false );
+    this.domElement.addEventListener( 'contextmenu', this.onContextMenu.bind(this), false );
 
-    this.domElement.addEventListener( 'mousedown', this.onMouseDown, false );
-    this.domElement.addEventListener( 'wheel', this.onMouseWheel, false );
+    this.domElement.addEventListener( 'mousedown', this.onMouseDown.bind(this), false );
+    this.domElement.addEventListener( 'wheel', this.onMouseWheel.bind(this), false );
 
-    this.domElement.addEventListener( 'touchstart', this.onTouchStart, false );
-    this.domElement.addEventListener( 'touchend', this.onTouchEnd, false );
-    this.domElement.addEventListener( 'touchmove', this.onTouchMove, false );
+    this.domElement.addEventListener( 'touchstart', this.onTouchStart.bind(this), false );
+    this.domElement.addEventListener( 'touchend', this.onTouchEnd.bind(this), false );
+    this.domElement.addEventListener( 'touchmove', this.onTouchMove.bind(this), false );
 
-    window.addEventListener( 'keydown', this.onKeyDown, false );
+    window.addEventListener( 'keydown', this.onKeyDown.bind(this), false );
 
   }
 
@@ -756,8 +756,8 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     if ( this.state !== STATE.NONE ) {
 
-      document.addEventListener( 'mousemove', this.onMouseMove, false );
-      document.addEventListener( 'mouseup', this.onMouseUp, false);
+      document.addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+      document.addEventListener( 'mouseup', this.onMouseUp.bind(this), false);
 
       this.dispatchEvent( { type: Events.start } );
 
@@ -812,7 +812,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   private onMouseWheel( event: MouseWheelEvent ) {
 
-    if ( this.enabled === false || this.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
+    if ( this.enabled === false || this.enableZoom === false || ( this.state !== STATE.NONE && this.state !== STATE.ROTATE ) ) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -931,7 +931,102 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private onContextMenu( event ) {
+  private onContextMenu( event: Event ) {
+
+    if ( this.enabled === false ) return;
+
+    event.preventDefault();
+
+  }
+
+  get center() {
+
+    console.warn( 'THREE.OrbitControls: .center has been renamed to .target' );
+    return this.target;
+
+  }
+
+  get noZoom(): boolean {
+
+    console.warn( 'THREE.OrbitControls: .noZoom has been deprecated. Use .enableZoom instead.' );
+    return ! this.enableZoom;
+
+  }
+
+  set noZoom( value: boolean ) {
+
+    console.warn( 'THREE.OrbitControls: .noZoom has been deprecated. Use .enableZoom instead.' );
+    this.enableZoom = ! value;
+
+  }
+
+  get noRotate(): boolean {
+
+    console.warn( 'THREE.OrbitControls: .noRotate has been deprecated. Use .enableRotate instead.' );
+    return ! this.enableRotate;
+
+  }
+
+  set noRotate( value: boolean ) {
+
+    console.warn( 'THREE.OrbitControls: .noRotate has been deprecated. Use .enableRotate instead.' );
+    this.enableRotate = ! value;
+
+  }
+
+  get noPan(): boolean {
+
+    console.warn( 'THREE.OrbitControls: .noPan has been deprecated. Use .enablePan instead.' );
+    return ! this.enablePan;
+
+  }
+
+  set noPan( value: boolean ) {
+
+    console.warn( 'THREE.OrbitControls: .noPan has been deprecated. Use .enablePan instead.' );
+    this.enablePan = ! value;
+
+  }
+
+  get noKeys(): boolean {
+
+    console.warn( 'THREE.OrbitControls: .noKeys has been deprecated. Use .enableKeys instead.' );
+    return ! this.enableKeys;
+
+  }
+
+  set noKeys( value: boolean ) {
+
+    console.warn( 'THREE.OrbitControls: .noKeys has been deprecated. Use .enableKeys instead.' );
+    this.enableKeys = ! value;
+
+  }
+
+  get staticMoving(): boolean {
+
+    console.warn( 'THREE.OrbitControls: .staticMoving has been deprecated. Use .enableDamping instead.' );
+    return ! this.enableDamping;
+
+  }
+
+  set staticMoving( value: boolean ) {
+
+    console.warn( 'THREE.OrbitControls: .staticMoving has been deprecated. Use .enableDamping instead.' );
+    this.enableDamping = ! value;
+
+  }
+
+  get dynamicDampeningFactor(): number {
+
+    console.warn( 'THREE.OrbitControls: .dynamicDampingFactor has been renamed. Use .dampingFactor instead.' );
+    return this.dampingFactor;
+
+  }
+
+  set dynamicDampeningFactor( value: number ) {
+
+    console.warn( 'THREE.OrbitControls: .dynamicDampingFactor has been renamed. Use .dampingFactor instead.' );
+    this.dampingFactor = value;
 
   }
 
