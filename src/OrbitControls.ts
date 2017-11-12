@@ -45,9 +45,6 @@ enum Events {
   end = 'end'
 }
 
-// Out of scope internals
-let state: STATE;
-
 export default class OrbitControls extends THREE.EventDispatcher {
   // Set to false to disable this control
   public enabled: boolean;
@@ -113,6 +110,29 @@ export default class OrbitControls extends THREE.EventDispatcher {
   private position0: THREE.Vector3;
   private zoom0: number;
 
+  private state: STATE;
+  private EPS: number;
+
+  // current position in spherical coordinates
+  private spherical: THREE.Spherical;
+  private sphericalDelta: THREE.Spherical;
+
+  private scale: number;
+  private panOffset: THREE.Vector3;
+  private zoomChanged: boolean;
+
+  private rotateStart: THREE.Vector2;
+  private rotateEnd: THREE.Vector2;
+  private rotateDelta: THREE.Vector2;
+
+  private panStart: THREE.Vector2;
+  private panEnd: THREE.Vector2;
+  private panDelta: THREE.Vector2;
+
+  private dollyStart: THREE.Vector2;
+  private dollyEnd: THREE.Vector2;
+  private dollyDelta: THREE.Vector2;
+
   constructor( object: THREE.PerspectiveCamera | THREE.OrthographicCamera, domElement: Document | Element = document ) {
 
     super();
@@ -125,6 +145,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     this.setupHandlers();
     this.update();
+
   }
 
   private setupDefaults() {
@@ -185,9 +206,34 @@ export default class OrbitControls extends THREE.EventDispatcher {
     // Mouse buttons
     this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE, PAN: THREE.MOUSE.RIGHT };
 
+    this.state = STATE.NONE;
+
+    this.EPS = 0.000001;
+
+    // current position in spherical coordinates
+    this.spherical = new THREE.Spherical();
+    this.sphericalDelta = new THREE.Spherical();
+
+    this.scale = 1;
+    this.panOffset = new THREE.Vector3();
+    this.zoomChanged = false;
+
+    this.rotateStart = new THREE.Vector2();
+    this.rotateEnd = new THREE.Vector2();
+    this.rotateDelta = new THREE.Vector2();
+
+    this.panStart = new THREE.Vector2();
+    this.panEnd = new THREE.Vector2();
+    this.panDelta = new THREE.Vector2();
+
+    this.dollyStart = new THREE.Vector2();
+    this.dollyEnd = new THREE.Vector2();
+    this.dollyDelta = new THREE.Vector2();
+
   }
 
   private setupHandlers() {
+
     this.domElement.addEventListener( 'contextmenu', onContextMenu, false );
 
     this.domElement.addEventListener( 'mousedown', onMouseDown, false );
@@ -198,6 +244,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
     this.domElement.addEventListener( 'touchmove', onTouchMove, false );
 
     window.addEventListener( 'keydown', onKeyDown, false );
+
   }
 
   getPolarAngle() {
@@ -227,14 +274,115 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     this.update();
 
-    state = STATE.NONE;
   }
 
-  update() {
+  // this method is exposed, but perhaps it would be better if we can make it private...
+  update(): boolean {
 
+    const offset: THREE.Vector3 = new THREE.Vector3();
+
+    // so camera.up is the orbit axis
+    const quat: THREE.Quaternion = new THREE.Quaternion().setFromUnitVectors( this.object.up, new THREE.Vector3( 0, 1, 0 ) );
+    const quatInverse: THREE.Quaternion = quat.clone().inverse();
+
+    const lastPosition: THREE.Vector3 = new THREE.Vector3();
+    const lastQuaternion: THREE.Quaternion = new THREE.Quaternion();
+
+    // fn?
+
+    const position: THREE.Vector3 = this.object.position;
+
+    offset.copy( position ).sub( this.target );
+
+    // rotate offset to "y-axis-is-up" space
+    offset.applyQuaternion( quat );
+
+    // angle from z-axis around y-axis
+    this.spherical.setFromVector3( offset );
+
+    if ( this.autoRotate && this.state === STATE.NONE ) {
+
+      rotateLeft( getAutoRotationAngle() );
+
+    }
+
+    this.spherical.theta += this.sphericalDelta.theta;
+    this.spherical.phi += this.sphericalDelta.phi;
+
+    // restrict theta to be between desired limits
+    this.spherical.theta = Math.max( this.minAzimuthAngle, Math.min( this.maxAzimuthAngle, this.spherical.theta ) );
+
+    // restrict phi to be between desired limits
+    this.spherical.phi = Math.max( this.minPolarAngle, Math.min( this.maxPolarAngle, this.spherical.phi ) );
+
+    this.spherical.makeSafe();
+
+    this.spherical.radius *= this.scale;
+
+    // restrict radius to be between desired limits
+    this.spherical.radius = Math.max( this.minDistance, Math.min( this.maxDistance, this.spherical.radius ) );
+
+    // move target to panned location
+    this.target.add( this.panOffset );
+
+    offset.setFromSpherical( this.spherical );
+
+    // rotate offset back to "camera-up-vector-is-up" space
+    offset.applyQuaternion( quatInverse );
+
+    position.copy( this.target ).add( offset );
+
+    this.object.lookAt( this.target );
+
+    if ( this.enableDamping === true ) {
+
+      this.sphericalDelta.theta *= ( 1 - this.dampingFactor );
+      this.sphericalDelta.phi *= ( 1 - this.dampingFactor );
+
+    } else {
+
+      this.sphericalDelta.set( 0, 0, 0);
+
+    }
+
+    this.scale = 1;
+    this.panOffset.set( 0, 0, 0 );
+
+    // update condition is:
+    // min(camera displacement, camera rotation in radians)^2 > EPS
+    // using small-angle approximation cos(x/2) = 1 - x^2 / 8
+
+    if ( this.zoomChanged ||
+      lastPosition.distanceToSquared( this.object.position ) > this.EPS ||
+      8 * ( 1 - lastQuaternion.dot( this.object.quaternion ) ) > this.EPS ) {
+
+      this.dispatchEvent( { type: Events.change } );
+
+      lastPosition.copy( this.object.position );
+      lastQuaternion.copy( this.object.quaternion );
+      this.zoomChanged = false;
+
+      return true;
+
+    }
+
+    return false;
   }
 
   dispose() {
+
+    this.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
+    this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
+    this.domElement.removeEventListener( 'wheel', onMouseWheel, false );
+
+    this.domElement.removeEventListener( 'touchstart', onTouchStart, false );
+    this.domElement.removeEventListener( 'touchend', onTouchEnd, false );
+    this.domElement.removeEventListener( 'touchmove', onTouchMove, false );
+
+    document.removeEventListener( 'mousemove', onMouseMove, false );
+    document.removeEventListener( 'mouseup', onMouseUp, false );
+
+    window.removeEventListener( 'keydown', onKeyDown, false );
 
   }
 
