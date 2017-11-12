@@ -717,35 +717,217 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private onMouseDown( event ) {
+  private onMouseDown( event: MouseEvent ) {
+
+    if ( this.enabled === false ) return;
+
+    event.preventDefault();
+
+    switch ( event.button ) {
+
+      case this.mouseButtons.ORBIT:
+
+        if ( this.enableRotate === false ) return;
+
+        this.handleMouseDownRotate( event );
+
+        this.state = STATE.ROTATE;
+        break;
+
+      case this.mouseButtons.ZOOM:
+
+        if ( this.enableZoom === false ) return;
+
+        this.handleMouseDownDolly( event );
+
+        this.state = STATE.DOLLY;
+        break
+
+      case this.mouseButtons.PAN:
+
+        if ( this.enablePan === false ) return;
+
+        this.handleMouseDownPan( event );
+
+        this.state = STATE.PAN;
+        break;
+
+    }
+
+    if ( this.state !== STATE.NONE ) {
+
+      document.addEventListener( 'mousemove', this.onMouseMove, false );
+      document.addEventListener( 'mouseup', this.onMouseUp, false);
+
+      this.dispatchEvent( { type: Events.start } );
+
+    }
 
   }
 
-  private onMouseMove( event ) {
+  private onMouseMove( event: MouseEvent ) {
+
+    if ( this.enabled === false ) return;
+
+    event.preventDefault();
+
+    switch ( this.state ) {
+
+      case STATE.ROTATE:
+
+        if ( this.enableRotate === false ) return;
+
+        this.handleMouseMoveRotate( event );
+        break;
+
+      case STATE.DOLLY:
+        if ( this.enableZoom === false ) return;
+
+        this.handleMouseMoveDolly( event );
+        break;
+
+      case STATE.PAN:
+        if ( this.enablePan === false ) return;
+
+        this.handleMouseMovePan( event );
+        break;
+    }
 
   }
 
-  private onMouseUp( event ) {
+  private onMouseUp( event: MouseEvent ) {
+
+    if ( this.enabled === false ) return;
+
+    this.handleMouseUp( event );
+
+    document.removeEventListener( 'mousemove', this.onMouseMove, false );
+    document.removeEventListener( 'mouseup', this.onMouseUp, false );
+
+    this.dispatchEvent( { type: Events.end } );
+
+    this.state = STATE.NONE;
 
   }
 
-  private onMouseWheel( event ) {
+  private onMouseWheel( event: MouseWheelEvent ) {
+
+    if ( this.enabled === false || this.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.handleMouseWheel( event );
+
+    // this.dispatchEvent( { type: Events.start } );
+    // this.dispatchEvent( { type: Events.end } );
 
   }
 
-  private onKeyDown( event ) {
+  private onKeyDown( event: KeyboardEvent ) {
+
+    if ( this.enabled === false || this.enableKeys === false || this.enablePan === false ) return;
+
+    this.handleKeyDown( event );
 
   }
 
-  private onTouchStart( event ) {
+  private onTouchStart( event: TouchEvent ) {
+
+    if ( this.enabled == false ) return;
+
+    switch ( event.touches.length ) {
+
+      case 1: // one-fingered touch: rotate
+
+        if ( this.enableRotate === false ) return;
+
+        this.handleTouchStartRotate( event );
+
+        this.state = STATE.TOUCH_ROTATE;
+        break;
+
+      case 2: // two-fingered touch: dolly
+
+        if ( this.enableZoom === false ) return;
+
+        this.handleTouchStartDolly( event );
+
+        this.state = STATE.TOUCH_DOLLY;
+        break;
+
+      case 3:
+
+        if ( this.enablePan === false ) return;
+
+        this.handleTouchStartPan( event );
+
+        this.state = STATE.TOUCH_PAN;
+        break;
+
+      default:
+
+        this.state = STATE.NONE;
+    }
+
+    if ( this.state !== STATE.NONE ) {
+
+      this.dispatchEvent( { type: Events.start } );
+
+    }
 
   }
 
-  private onTouchMove( event ) {
+  private onTouchMove( event: TouchEvent ) {
+
+    if ( this.enabled === false ) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    switch ( event.touches.length ) {
+
+      case 1:
+
+        if ( this.enableRotate === false ) return;
+        // if ( this.state !== STATE.TOUCH_ROTATE ) return
+
+        this.handleTouchMoveRotate( event );
+        break;
+
+      case 2:
+
+        if ( this.enableZoom === false ) return;
+        // if ( this.state !== STATE.TOUCH_DOLLY ) return;
+
+        this.handleTouchMoveDolly( event );
+        break;
+
+      case 3:
+
+        if ( this.enablePan === false ) return;
+        // if ( this.state !== STATE.TOUCH_PAN ) return;
+
+        this.handleTouchMovePan( event );
+        break;
+
+      default:
+
+        this.state = STATE.NONE;
+
+    }
 
   }
 
   private onTouchEnd( event ) {
+
+    if ( this.enabled === false ) return;
+
+    this.handleTouchEnd( event );
+
+    this.dispatchEvent( { type: Events.end } );
+
+    this.state = STATE.NONE;
 
   }
 
