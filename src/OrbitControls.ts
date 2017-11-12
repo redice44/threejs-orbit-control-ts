@@ -605,35 +605,59 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private handleKeyDown( event ) {
+  private handleKeyDown( event: KeyboardEvent ) {
+
+    switch ( event.keyCode ) {
+
+      case this.keys.UP:
+        this.pan( 0, this.keyPanSpeed );
+        this.update();
+        break;
+
+      case this.keys.BOTTOM:
+        this.pan( 0, - this.keyPanSpeed );
+        this.update();
+        break;
+
+      case this.keys.LEFT:
+        this.pan( this.keyPanSpeed, 0 );
+        this.update();
+        break;
+
+      case this.keys.RIGHT:
+        this.pan( - this.keyPanSpeed, 0 );
+        this.update();
+        break;
+
+    }
 
   }
 
-  private handleTouchStartRotate( event ) {
+  private handleTouchStartRotate( event: TouchEvent ) {
 
   }
 
-  private handleTouchStartDolly( event ) {
+  private handleTouchStartDolly( event: TouchEvent ) {
 
   }
 
-  private handleTouchStartPan( event ) {
+  private handleTouchStartPan( event: TouchEvent ) {
 
   }
 
-  private handleTouchMoveRotate( event ) {
+  private handleTouchMoveRotate( event: TouchEvent ) {
 
   }
 
-  private handleTouchMoveDolly( event ) {
+  private handleTouchMoveDolly( event: TouchEvent ) {
 
   }
 
-  private handleTouchMovePan( event ) {
+  private handleTouchMovePan( event: TouchEvent ) {
 
   }
 
-  private handleTouchEnd( event ) {
+  private handleTouchEnd( event: TouchEvent ) {
 
   }
 
