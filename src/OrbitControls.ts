@@ -432,7 +432,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private pan( deltaX, deltaY ) {
+  private pan( deltaX, deltaY ): void {
 
     const offset: THREE.Vector3 = new THREE.Vector3();
 
@@ -470,7 +470,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private dollyIn( dollyScale ) {
+  private dollyIn( dollyScale ): void {
 
     if ( ( this.camera as THREE.PerspectiveCamera ).isPerspectiveCamera ) {
 
@@ -491,7 +491,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private dollyOut( dollyScale ) {
+  private dollyOut( dollyScale ): void {
 
     if ( ( this.camera as THREE.PerspectiveCamera ).isPerspectiveCamera ) {
 
@@ -512,35 +512,96 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  private handleMouseDownRotate( event ) {
+  private handleMouseDownRotate( event: MouseEvent ): void {
+
+    this.rotateStart.set( event.clientX, event.clientY );
 
   }
 
-  private handleMouseDownDolly( event ) {
+  private handleMouseDownDolly( event: MouseEvent ): void {
+
+    this.dollyStart.set( event.clientX, event.clientY );
 
   }
 
-  private handleMouseDownPan( event ) {
+  private handleMouseDownPan( event: MouseEvent ): void {
+
+    this.panStart.set( event.clientX, event.clientY );
 
   }
 
-  private handleMouseMoveRotate( event ) {
+  private handleMouseMoveRotate( event: MouseEvent ): void {
+
+    this.rotateEnd.set( event.clientX, event.clientY );
+    this.rotateDelta.subVectors( this.rotateEnd, this.rotateStart );
+
+    const element: Element = this.domElement === document ? this.domElement.body : this.domElement as Element;
+
+    // rotating across whole screen goes 360 degrees around
+    this.rotateLeft( 2 * Math.PI * this.rotateDelta.x / element.clientWidth * this.rotateSpeed );
+
+    // rotating up and down along whole screen attempts to go 360, but limited to 180
+    this.rotateUp( 2 * Math.PI * this.rotateDelta.y / element.clientHeight * this.rotateSpeed );
+
+    this.rotateStart.copy( this.rotateEnd );
+
+    this.update();
 
   }
 
-  private handleMouseMoveDolly( event ) {
+  private handleMouseMoveDolly( event: MouseEvent ): void {
+
+    this.dollyEnd.set( event.clientX, event.clientY );
+
+    this.dollyDelta.subVectors( this.dollyEnd, this.dollyStart );
+
+    if ( this.dollyDelta.y > 0 ) {
+
+      this.dollyIn( this.getZoomScale() );
+
+    } else if ( this.dollyDelta.y < 0 ) {
+
+      this.dollyOut( this.getZoomScale() );
+
+    }
+
+    this.dollyStart.copy( this.dollyEnd );
+
+    this.update();
 
   }
 
-  private handleMouseMovePan( event ) {
+  private handleMouseMovePan( event: MouseEvent ): void {
+
+    this.panEnd.set( event.clientX, event.clientY );
+
+    this.panDelta.subVectors( this.panEnd, this.panStart );
+
+    this.pan( this.panDelta.x, this.panDelta.y );
+
+    this.panStart.copy( this.panEnd );
+
+    this.update();
 
   }
 
-  private handleMouseUp( event ) {
+  private handleMouseUp( event: MouseEvent ): void {
 
   }
 
-  private handleMouseWheel( event ) {
+  private handleMouseWheel( event: MouseWheelEvent ): void {
+
+    if ( event.deltaY < 0 ) {
+
+      this.dollyOut( this.getZoomScale() );
+
+    } else if ( event.deltaY > 0 ) {
+
+      this.dollyIn( this.getZoomScale() );
+
+    }
+
+    this.update();
 
   }
 
