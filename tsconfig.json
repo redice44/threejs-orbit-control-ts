@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "baseUrl": ".",
+    "typeRoots": [
+      "./node_modules/@types/**/*.d.ts"
+    ],
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    }
+  },
+  "include": [
+    "./**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

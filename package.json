@@ -1,0 +1,22 @@
+{
+  "name": "OrbitControl",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "tsc --watch --pretty"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^8.0.51",
+    "@types/three": "^0.84.30",
+    "typescript": "^2.6.1"
+  },
+  "dependencies": {
+    "three": "^0.88.0"
+  }
+}
