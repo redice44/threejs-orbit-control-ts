@@ -29,6 +29,25 @@ interface MouseButtons {
   PAN: THREE.MOUSE
 }
 
+enum STATE {
+  NONE = -1,
+  ROTATE,
+  DOLLY,
+  PAN,
+  TOUCH_ROTATE,
+  TOUCH_DOLLY,
+  TOUCH_PAN
+}
+
+enum Events {
+  change = 'change',
+  start = 'start',
+  end = 'end'
+}
+
+// Out of scope internals
+let state: STATE;
+
 export default class OrbitControls extends THREE.EventDispatcher {
   // Set to false to disable this control
   public enabled: boolean;
@@ -89,7 +108,13 @@ export default class OrbitControls extends THREE.EventDispatcher {
   private object: THREE.PerspectiveCamera | THREE.OrthographicCamera;
   private domElement: Document | Element;
 
-  constructor(object: THREE.PerspectiveCamera | THREE.OrthographicCamera, domElement: Document | Element = document) {
+  // for reset
+  private target0: THREE.Vector3;
+  private position0: THREE.Vector3;
+  private zoom0: number;
+
+  constructor( object: THREE.PerspectiveCamera | THREE.OrthographicCamera, domElement: Document | Element = document ) {
+
     super();
 
     this.object = object;
@@ -152,6 +177,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     // Mouse buttons
     this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE, PAN: THREE.MOUSE.RIGHT };
+
   }
 
   getPolarAngle() {
@@ -164,10 +190,24 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   saveState() {
 
+    this.target0.copy( this.target );
+    this.position0.copy( this.object.position );
+    this.zoom0 = this.object.zoom;
+
   }
 
   reset() {
 
+    this.target.copy( this.target0 );
+    this.object.position.copy( this.position0 );
+    this.object.zoom = this.zoom0;
+
+    this.object.updateProjectionMatrix();
+    this.dispatchEvent( { type: Events.change } );
+
+    this.update();
+
+    state = STATE.NONE;
   }
 
   update() {
@@ -179,6 +219,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
   }
 
 }
+
 
 
 function getAutoRotationAngle() {
