@@ -234,28 +234,28 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   private setupHandlers() {
 
-    this.domElement.addEventListener( 'contextmenu', onContextMenu, false );
+    this.domElement.addEventListener( 'contextmenu', this.onContextMenu, false );
 
-    this.domElement.addEventListener( 'mousedown', onMouseDown, false );
-    this.domElement.addEventListener( 'wheel', onMouseWheel, false );
+    this.domElement.addEventListener( 'mousedown', this.onMouseDown, false );
+    this.domElement.addEventListener( 'wheel', this.onMouseWheel, false );
 
-    this.domElement.addEventListener( 'touchstart', onTouchStart, false );
-    this.domElement.addEventListener( 'touchend', onTouchEnd, false );
-    this.domElement.addEventListener( 'touchmove', onTouchMove, false );
+    this.domElement.addEventListener( 'touchstart', this.onTouchStart, false );
+    this.domElement.addEventListener( 'touchend', this.onTouchEnd, false );
+    this.domElement.addEventListener( 'touchmove', this.onTouchMove, false );
 
-    window.addEventListener( 'keydown', onKeyDown, false );
-
-  }
-
-  getPolarAngle() {
+    window.addEventListener( 'keydown', this.onKeyDown, false );
 
   }
 
-  getAzimuthalAngle() {
+  public getPolarAngle() {
 
   }
 
-  saveState() {
+  public getAzimuthalAngle() {
+
+  }
+
+  public saveState() {
 
     this.target0.copy( this.target );
     this.position0.copy( this.object.position );
@@ -263,7 +263,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   }
 
-  reset() {
+  public reset() {
 
     this.target.copy( this.target0 );
     this.object.position.copy( this.position0 );
@@ -277,7 +277,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
   }
 
   // this method is exposed, but perhaps it would be better if we can make it private...
-  update(): boolean {
+  public update(): boolean {
 
     const offset: THREE.Vector3 = new THREE.Vector3();
 
@@ -302,7 +302,7 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
     if ( this.autoRotate && this.state === STATE.NONE ) {
 
-      rotateLeft( getAutoRotationAngle() );
+      this.rotateLeft( this.getAutoRotationAngle() );
 
     }
 
@@ -369,159 +369,157 @@ export default class OrbitControls extends THREE.EventDispatcher {
     return false;
   }
 
-  dispose() {
+  public dispose() {
 
-    this.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
-    this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
-    this.domElement.removeEventListener( 'wheel', onMouseWheel, false );
+    this.domElement.removeEventListener( 'contextmenu', this.onContextMenu, false );
+    this.domElement.removeEventListener( 'mousedown', this.onMouseDown, false );
+    this.domElement.removeEventListener( 'wheel', this.onMouseWheel, false );
 
-    this.domElement.removeEventListener( 'touchstart', onTouchStart, false );
-    this.domElement.removeEventListener( 'touchend', onTouchEnd, false );
-    this.domElement.removeEventListener( 'touchmove', onTouchMove, false );
+    this.domElement.removeEventListener( 'touchstart', this.onTouchStart, false );
+    this.domElement.removeEventListener( 'touchend', this.onTouchEnd, false );
+    this.domElement.removeEventListener( 'touchmove', this.onTouchMove, false );
 
-    document.removeEventListener( 'mousemove', onMouseMove, false );
-    document.removeEventListener( 'mouseup', onMouseUp, false );
+    document.removeEventListener( 'mousemove', this.onMouseMove, false );
+    document.removeEventListener( 'mouseup', this.onMouseUp, false );
 
-    window.removeEventListener( 'keydown', onKeyDown, false );
+    window.removeEventListener( 'keydown', this.onKeyDown, false );
 
   }
 
-}
+  private getAutoRotationAngle() {
 
+  }
 
+  private getZoomScale() {
 
-function getAutoRotationAngle() {
+  }
 
-}
+  private rotateLeft(angle) {
 
-function getZoomScale() {
+  }
 
-}
+  private rotateUp(angle) {
 
-function rotateLeft(angle) {
+  }
 
-}
+  private panLeft() {
 
-function rotateUp(angle) {
+  }
 
-}
+  private panUp() {
 
-function panLeft() {
+  }
 
-}
+  private pan() {
 
-function panUp() {
+  }
 
-}
+  private dollyIn( dollyScale ) {
 
-function pan() {
+  }
 
-}
+  private dollyOut( dollyScale ) {
 
-function dollyIn(dollyScale) {
+  }
 
-}
+  private handleMouseDownRotate( event ) {
 
-function dollyOut(dollyScale) {
+  }
 
-}
+  private handleMouseDownDolly( event ) {
 
-function handleMouseDownRotate(event) {
+  }
 
-}
+  private handleMouseDownPan( event ) {
 
-function handleMouseDownDolly(event) {
+  }
 
-}
+  private handleMouseMoveRotate( event ) {
 
-function handleMouseDownPan(event) {
+  }
 
-}
+  private handleMouseMoveDolly( event ) {
 
-function handleMouseMoveRotate(event) {
+  }
 
-}
+  private handleMouseMovePan( event ) {
 
-function handleMouseMoveDolly(event) {
+  }
 
-}
+  private handleMouseUp( event ) {
 
-function handleMouseMovePan(event) {
+  }
 
-}
+  private handleMouseWheel( event ) {
 
-function handleMouseUp(event) {
+  }
 
-}
+  private handleKeyDown( event ) {
 
-function handleMouseWheel(event) {
+  }
 
-}
+  private handleTouchStartRotate( event ) {
 
-function handleKeyDown(event) {
+  }
 
-}
+  private handleTouchStartDolly( event ) {
 
-function handleTouchStartRotate(event) {
+  }
 
-}
+  private handleTouchStartPan( event ) {
 
-function handleTouchStartDolly(event) {
+  }
 
-}
+  private handleTouchMoveRotate( event ) {
 
-function handleTouchStartPan(event) {
+  }
 
-}
+  private handleTouchMoveDolly( event ) {
 
-function handleTouchMoveRotate(event) {
+  }
 
-}
+  private handleTouchMovePan( event ) {
 
-function handleTouchMoveDolly(event) {
+  }
 
-}
+  private handleTouchEnd( event ) {
 
-function handleTouchMovePan(event) {
+  }
 
-}
+  private onMouseDown( event ) {
 
-function handleTouchEnd(event) {
+  }
 
-}
+  private onMouseMove( event ) {
 
-function onMouseDown(event) {
+  }
 
-}
+  private onMouseUp( event ) {
 
-function onMouseMove(event) {
+  }
 
-}
+  private onMouseWheel( event ) {
 
-function onMouseUp(event) {
+  }
 
-}
+  private onKeyDown( event ) {
 
-function onMouseWheel(event) {
+  }
 
-}
+  private onTouchStart( event ) {
 
-function onKeyDown(event) {
+  }
 
-}
+  private onTouchMove( event ) {
 
-function onTouchStart(event) {
+  }
 
-}
+  private onTouchEnd( event ) {
 
-function onTouchMove(event) {
+  }
 
-}
+  private onContextMenu( event ) {
 
-function onTouchEnd(event) {
-
-}
-
-function onContextMenu(event) {
+  }
 
 }
