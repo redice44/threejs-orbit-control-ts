@@ -635,25 +635,81 @@ export default class OrbitControls extends THREE.EventDispatcher {
 
   private handleTouchStartRotate( event: TouchEvent ) {
 
+    this.rotateStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
   }
 
   private handleTouchStartDolly( event: TouchEvent ) {
+
+    const dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+    const dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+
+    const distance = Math.sqrt( dx * dx + dy * dy );
+
+    this.dollyStart.set( 0 , distance );
 
   }
 
   private handleTouchStartPan( event: TouchEvent ) {
 
+    this.panStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
   }
 
   private handleTouchMoveRotate( event: TouchEvent ) {
+
+    this.rotateEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+    this.rotateDelta.subVectors( this.rotateEnd, this.rotateStart );
+
+    const element: Element = this.domElement === document ? this.domElement.body : this.domElement as Element;
+
+    this.rotateLeft( 2 * Math.PI * this.rotateDelta.x / element.clientWidth * this.rotateSpeed );
+    this.rotateUp( 2 * Math.PI * this.rotateDelta.y / element.clientHeight * this.rotateSpeed );
+
+    this.rotateStart.copy( this.rotateEnd );
+
+    this.update();
 
   }
 
   private handleTouchMoveDolly( event: TouchEvent ) {
 
+    const dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+    const dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+
+    const distance = Math.sqrt( dx * dx + dy * dy );
+
+    this.dollyEnd.set( 0, distance );
+
+    this.dollyDelta.subVectors( this.dollyEnd, this.dollyStart );
+
+    if ( this.dollyDelta.y > 0 ) {
+
+      this.dollyOut( this.getZoomScale() );
+
+    } else if ( this.dollyDelta.y < 0 ) {
+
+      this.dollyIn( this.getZoomScale() );
+
+    }
+
+    this.dollyStart.copy( this.dollyEnd );
+
+    this.update();
+
   }
 
   private handleTouchMovePan( event: TouchEvent ) {
+
+    this.panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+    this.panDelta.subVectors( this.panEnd, this.panStart );
+
+    this.pan( this.panDelta.x, this.panDelta.y );
+
+    this.panStart.copy( this.panEnd );
+
+    this.update();
 
   }
 
